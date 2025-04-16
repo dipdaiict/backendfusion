@@ -2,7 +2,8 @@
 import asyncpg # type: ignore
 import logging
 from typing import Optional
-from app.config import (postgres_settings)
+import redis.asyncio as redis
+from app.config import (postgres_settings, redis_settings)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +46,23 @@ class Database:
         """Release a connection back to the pool."""
         await self.pool.release(conn)
 
+class RedisClient:
+    def __init__(self):
+        self._client: Optional[redis.Redis] = None
+
+    def connect(self) -> redis.Redis:
+        if not self._client:
+            self._client = redis.Redis(
+                host=redis_settings.redis_host,
+                port=redis_settings.redis_port,
+                username=redis_settings.redis_username,
+                password=redis_settings.redis_password,
+                db=redis_settings.redis_db,
+                decode_responses=True)
+            Logger.info("Redis client initialized.")
+        return self._client
+
 # Create instances
 db = Database(DATABASE_URL)
+redis_client = RedisClient()
 Logger.info("Postgres Database set up.")
