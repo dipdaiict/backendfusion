@@ -20,6 +20,13 @@ class RedisSettings(BaseSettings):
 
     model_config = ConfigDict(env_file=".env", extra="ignore")
 
+class OpenTelemetrySettings(BaseSettings):
+    service_name: str = "fastapi-service"
+    otlp_endpoint: str = "http://localhost:4318/v1/traces"
+    
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+
 # Instantiate
 redis_settings = RedisSettings()
 postgres_settings = PostgresSettings()
+otel_settings = OpenTelemetrySettings()
