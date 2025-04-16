@@ -1,13 +1,20 @@
 from fastapi import FastAPI
+from app.dependencies import db
 from app.api import routes_system
-# from app.middleware import setup_middlewares
-# from app.logging_conf import configure_logging
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+# Lifespan handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await db.connect()
+    yield
+    # Shutdown
+    await db.disconnect()
 
-# configure_logging(app)
-# setup_middlewares(app)
+# Create the app with lifespan
+app = FastAPI(lifespan=lifespan)
 
-# app.include_router(routes_user.router, prefix='/users')
-# app.include_router(routes_auth.router, prefix='/auth')
+# Register API routes:
 app.include_router(routes_system.router, prefix='/system')
+
