@@ -1,4 +1,5 @@
 # Shared dependencies like DB, JWT
+import asyncio
 import asyncpg # type: ignore
 import logging
 from typing import Optional
@@ -50,7 +51,7 @@ class RedisClient:
     def __init__(self):
         self._client: Optional[redis.Redis] = None
 
-    def connect(self) -> redis.Redis:
+    async def connect(self) -> redis.Redis:
         if not self._client:
             self._client = redis.Redis(
                 host=redis_settings.redis_host,
@@ -58,8 +59,21 @@ class RedisClient:
                 username=redis_settings.redis_username,
                 password=redis_settings.redis_password,
                 db=redis_settings.redis_db,
-                decode_responses=True)
-            Logger.info("Redis client initialized.")
+                decode_responses=True
+            )
+            retries = 3
+            for attempt in range(retries):
+                try:
+                    await self._client.ping()
+                    Logger.info("Redis client initialized and connected.")
+                    break
+                except redis.ConnectionError:
+                    Logger.warning(f"Redis connection failed (attempt {attempt + 1}/{retries})")
+                    if attempt < retries - 1:
+                        await asyncio.sleep(2)
+                    else:
+                        Logger.error("Failed to connect to Redis after retries.")
+                        raise Exception("Redis server is not reachable.")
         return self._client
 
 # Create instances
