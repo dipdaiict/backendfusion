@@ -59,8 +59,7 @@ class RedisClient:
                 username=redis_settings.redis_username,
                 password=redis_settings.redis_password,
                 db=redis_settings.redis_db,
-                decode_responses=True
-            )
+                decode_responses=True)
             retries = 3
             for attempt in range(retries):
                 try:
